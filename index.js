@@ -2,24 +2,77 @@ const baseURL = 'https://api.github.com';
 const user = 'eyaltoledano';
 
 function getToken() {
-  //change to your token to run in browser, but set
-  //back to '' before committing so all tests pass
   return '';
 }
 
 function forkRepo() {
-  const repo = 'learn-co-curriculum/js-ajax-fetch-lab';
-  //use fetch to fork it!
+  let repo = 'learn-co-curriculum/js-ajax-fetch-lab';
+  let repoPostUrl = baseURL + '/repos/' + repo + '/forks'
+  fetch(
+  	repoPostUrl,
+      {
+    		method: 'POST',
+    		headers: {
+    			Authorization: `token ${getToken()}`
+        }
+      }
+  ).then(response => response.json())
+   .then(json => showResults(json))
 }
 
 function showResults(json) {
-  //use this function to display the results from forking via the API
+  let resultsDiv = document.getElementById('results')
+  let repoLink = json.html_url
+  let divData = `<a href="${repoLink}">${json.parent.name} was forked  successfully</a>`
+  resultsDiv
+  // why did i need to call resultsDiv? it doesn't work otherwise lol
+  resultsDiv.innerHTML = divData
 }
 
 function createIssue() {
-  //use this function to create an issue based on the values input in index.html
+  let inputValueTitle = document.getElementById('title').value
+  let inputValueBody = document.getElementById('body').value
+  let issueData = {"title": inputValueTitle, "body": inputValueBody}
+
+  // POST /repos/:owner/:repo/issues
+  let repo = `${user}/js-ajax-fetch-lab`;
+  let issuePostUrl = baseURL + '/repos/' + repo + '/issues'
+
+  fetch(
+    issuePostUrl,
+      {
+        method: 'POST',
+        body: JSON.stringify(issueData),
+        headers: {
+    			Authorization: `token ${getToken()}`
+        }
+      }
+  ).then(response => response.json())
+   .then(json => getIssues())
 }
 
 function getIssues() {
-  //once an issue is submitted, fetch all open issues to see the issues you are creating
+  function listIssues(json) {
+    let startUl = '<ul>'
+    let endUl = '</ul>'
+    let issuesDiv = document.getElementById('issues')
+    issuesDiv
+    issuesDiv.innerHTML = startUl + json.map(
+      issue => '<li>' + `<a href='${issue.url}'>` + `${issue.title} (#${issue.url.split('/').slice(-1)[0]})` + '</a>' + '</li>'
+    ).join('') + endUl
+  }
+
+  // GET /repos/:owner/:repo/issues
+  let repo = `${user}/js-ajax-fetch-lab`;
+  let ownedIssuesUrl = baseURL + '/repos/' + repo + '/issues'
+  fetch(
+    ownedIssuesUrl,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `token ${getToken()}`
+      }
+    }
+  ).then(response => response.json())
+   .then(json => listIssues(json))
 }
